@@ -177,7 +177,7 @@
           <groupId>org.apache.beam</groupId>
           <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
           <version>${beam.version}</version>
-          <scope>runtime</scope>
+          <scope>compile</scope>
         </dependency>
       </dependencies>
     </profile>

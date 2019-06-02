@@ -73,6 +73,7 @@ public class AnalyticsDemoPipeline {
 
         PipelineResult pipelineResult = p.run();
         LOG.info(pipelineResult.toString());
+        pipelineResult.waitUntilFinish();
     }
 
     public static PCollection<String> buildPipeline(
@@ -122,7 +123,7 @@ public class AnalyticsDemoPipeline {
 
     private static PCollectionView<Map<String, String>> addressLabels(Pipeline p) {
         String addressLabelsQuery = "SELECT address, label "
-            + "FROM `crypto-etl-ethereum-dev.dataflow_sql.all_labels` limit 100000";
+            + "FROM `crypto-etl-ethereum-dev.dataflow_sql.all_labels`";
 
         PCollection<TableRow> rows = p.apply("AddressLabels",
             BigQueryIO.readTableRows().fromQuery(addressLabelsQuery)

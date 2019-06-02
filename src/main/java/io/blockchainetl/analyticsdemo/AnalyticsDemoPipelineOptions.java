@@ -5,8 +5,10 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.SdkHarnessOptions;
 import org.apache.beam.sdk.options.StreamingOptions;
 import org.apache.beam.sdk.options.Validation;
+import org.apache.beam.runners.dataflow.options.DataflowWorkerHarnessOptions;
 
-public interface AnalyticsDemoPipelineOptions extends PipelineOptions, StreamingOptions, SdkHarnessOptions {
+public interface AnalyticsDemoPipelineOptions extends PipelineOptions, StreamingOptions, SdkHarnessOptions,
+    DataflowWorkerHarnessOptions {
 
     @Description("Input PubSub subscription")
     @Validation.Required
