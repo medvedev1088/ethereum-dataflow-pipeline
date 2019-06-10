@@ -1,8 +1,9 @@
 package io.blockchainetl.analyticsdemo.service;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public interface PercentileService {
 
-    BigInteger getEtherPercentile();
+    BigInteger getEtherPercentile(BigDecimal percentile, Long periodDays);
 }

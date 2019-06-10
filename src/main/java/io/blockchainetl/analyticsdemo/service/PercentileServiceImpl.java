@@ -16,52 +16,36 @@ public class PercentileServiceImpl implements PercentileService {
 
     private static final Logger LOG = LoggerFactory.getLogger(PercentileServiceImpl.class);
 
-    private BigInteger cachedPercentile;
-    private final Long lock = 0L;
-
     @Override
-    public BigInteger getEtherPercentile() {
-        if (cachedPercentile == null) {
-            synchronized (lock) {
-                if (cachedPercentile == null) {
-                    cachedPercentile = doGetEtherPercentile();
-                }
-            }
-
-        }
-        return cachedPercentile;
-    }
-
-    private BigInteger doGetEtherPercentile() {
-        BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-        String query = "select PERCENTILE_CONT(value, 0.999) OVER() AS percentile99\n"
+    public BigInteger getEtherPercentile(BigDecimal percentile, Long periodDays) {
+        BigDecimal percentileAsFraction = percentile.divide(BigDecimal.valueOf(100), 10, BigDecimal.ROUND_HALF_DOWN);
+        String query = String.format("select PERCENTILE_CONT(value, %s) OVER() AS percentile_value\n"
             + "from `bigquery-public-data.crypto_ethereum.transactions` as t\n"
-            + "where DATE(block_timestamp) > DATE_ADD(CURRENT_DATE() , INTERVAL -30 DAY)\n"
-            + "limit 1";
-
-        LOG.info("Calling BigQuery: " + query);
+            + "where DATE(block_timestamp) > DATE_ADD(CURRENT_DATE() , INTERVAL -%s DAY)\n"
+            + "limit 1", percentileAsFraction, periodDays);
 
         QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
+        BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
         TableResult tableResult;
         try {
+            LOG.info("Calling BigQuery: " + query);
             tableResult = bigquery.query(queryConfig);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
-        LOG.info("Got results: " + tableResult.getTotalRows());
+        LOG.info("Got results with size: " + tableResult.getTotalRows());
 
 
         for (FieldValueList row : tableResult.iterateAll()) {
-            FieldValue percentile99 = row.get("percentile99");
+            FieldValue percentileValue = row.get("percentile_value");
 
-            if (percentile99 == null || percentile99.getNumericValue() == null) {
+            if (percentileValue == null || percentileValue.getNumericValue() == null) {
                 throw new IllegalArgumentException("Value in null in BigQuery result");
             }
 
-            BigDecimal numericValue = percentile99.getNumericValue();
+            BigDecimal numericValue = percentileValue.getNumericValue();
 
             return numericValue.toBigInteger();
         }
