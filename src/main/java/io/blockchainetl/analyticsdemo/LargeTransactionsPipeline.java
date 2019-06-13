@@ -3,7 +3,6 @@ package io.blockchainetl.analyticsdemo;
 import io.blockchainetl.analyticsdemo.domain.LargeTransactionMessage;
 import io.blockchainetl.analyticsdemo.domain.Transaction;
 import io.blockchainetl.analyticsdemo.fns.AddTimestampsFn;
-import io.blockchainetl.analyticsdemo.fns.BuildLargeTransactionMessagesFn;
 import io.blockchainetl.analyticsdemo.fns.EncodeToJsonFn;
 import io.blockchainetl.analyticsdemo.fns.FilterLargeTransactionsFn;
 import io.blockchainetl.analyticsdemo.fns.LogElementsFn;
@@ -90,25 +89,19 @@ public class LargeTransactionsPipeline {
 
         // Filter large transactions
 
-        PCollection<Transaction> largeTransactions = transactions
+        PCollection<LargeTransactionMessage> largeTransactions = transactions
             .apply("FilterLargeTransactions",
                 ParDo.of(new FilterLargeTransactionsFn(etherPercentile)).withSideInputs(etherPercentile));
 
-        // Build message
-
-        PCollection<LargeTransactionMessage> transactionWindows = largeTransactions
-            .apply(ParDo.of(new BuildLargeTransactionMessagesFn()));
-
-
         // Encode to JSON
 
-        return transactionWindows.apply("EncodeToJson", ParDo.of(new EncodeToJsonFn()));
+        return largeTransactions.apply("EncodeToJson", ParDo.of(new EncodeToJsonFn()));
     }
 
     // https://beam.apache.org/documentation/patterns/side-input-patterns/#using-global-window-side-inputs-in-non-global-windows
     private static PCollectionView<BigInteger> etherPercentile(Pipeline p) {
         PCollectionView<BigInteger> etherPercentile =
-            p.apply(GenerateSequence.from(0).withRate(1, Duration.standardHours(1L)))
+            p.apply(GenerateSequence.from(0).withRate(1, Duration.standardHours(12L)))
                 .apply(Window.<Long>into(new GlobalWindows())
                     .triggering(Repeatedly.forever(AfterProcessingTime.pastFirstElementInPane()))
                     .discardingFiredPanes()
