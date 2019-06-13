@@ -88,7 +88,7 @@ public class LargeTransactionsPipeline {
             .apply("ParseTransactions", ParDo.of(new ParseEntitiesFromJsonFn<>(Transaction.class)))
             .setCoder(AvroCoder.of(Transaction.class));
 
-        // Large transactions
+        // Filter large transactions
 
         PCollection<Transaction> largeTransactions = transactions
             .apply("FilterLargeTransactions",
@@ -102,13 +102,13 @@ public class LargeTransactionsPipeline {
 
         // Encode to JSON
 
-        return transactionWindows
-            .apply("EncodeToJson", ParDo.of(new EncodeToJsonFn()));
+        return transactionWindows.apply("EncodeToJson", ParDo.of(new EncodeToJsonFn()));
     }
 
+    // https://beam.apache.org/documentation/patterns/side-input-patterns/#using-global-window-side-inputs-in-non-global-windows
     private static PCollectionView<BigInteger> etherPercentile(Pipeline p) {
         PCollectionView<BigInteger> etherPercentile =
-            p.apply(GenerateSequence.from(0).withRate(1, Duration.standardDays(1L)))
+            p.apply(GenerateSequence.from(0).withRate(1, Duration.standardHours(1L)))
                 .apply(Window.<Long>into(new GlobalWindows())
                     .triggering(Repeatedly.forever(AfterProcessingTime.pastFirstElementInPane()))
                     .discardingFiredPanes()
