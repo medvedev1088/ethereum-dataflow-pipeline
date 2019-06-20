@@ -16,7 +16,7 @@ public class AddressLabelsToMapFn extends DoFn<TableRow, KV<String, String>> {
         String address = (String) row.get("address");
         String label = (String) row.get("label");
         if (address != null && !address.isEmpty() && label != null && !label.isEmpty()) {
-            LOG.info("Adding " + address + " with label " + label);
+            LOG.debug("Adding " + address + " with label " + label);
             c.output(KV.of(address, label));
         }
     }
