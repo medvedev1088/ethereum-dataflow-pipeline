@@ -21,7 +21,7 @@ import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
-import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.SlidingWindows;
 import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -99,9 +99,9 @@ public class AnalyticsDemoPipeline {
 
         PCollection<Transaction> window = enrichedTransactions
             .apply("AddWindows",
-                Window.<Transaction>into(FixedWindows.of(Duration.standardMinutes(1)))
-                    .triggering(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardMinutes(1)))
-                    .withAllowedLateness(Duration.standardHours(2))
+                Window.<Transaction>into(SlidingWindows.of(Duration.standardMinutes(5)).every(Duration.standardSeconds(15)))
+                    .triggering(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardMinutes(5)))
+                    .withAllowedLateness(Duration.standardHours(1))
                     .accumulatingFiredPanes()
             );
 
